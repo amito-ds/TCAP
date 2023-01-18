@@ -1,16 +1,16 @@
-from typing import Any, Dict
+from typing import Dict, Any
 
 import pandas as pd
 
 from cleaning.cleaning import clean_text
 from data_loader.webtext_data import load_data_pirates, load_data_king_arthur
 from feature_analyzing.feature_correlation import PreModelAnalysis
-from features_engineering.fe_main import get_embeddings
-from preprocessing.preprocessing import preprocess_text, get_stemmer
+# from features_engineering.fe_main import get_embeddings
+from preprocessing.preprocessing import get_stemmer, preprocess_text
 from text_analyzer.smart_text_analyzer import analyze_text
-from util import get_stopwords
 
 
+# from full_cycle.nlp import NLP
 class NLP:
     def __init__(self, df: pd.DataFrame, text_column: str = 'text', target_column: str = 'target'):
         self.df = df
@@ -96,47 +96,69 @@ class NLP:
                      top_words=top_words,
                      n_sentences=n_sentences)
 
-    def run_feature_extraction_engineering(self, feature_extraction_engineering_params: Dict[str, Any] = None):
-        """
-        Perform model pre-analysis on the text_column of the dataframe using the provided parameters
-        """
-        if not feature_extraction_engineering_params:
-            feature_extraction_engineering_params = {}
-        corex = feature_extraction_engineering_params.get('corex', True)
-        corex_dim = feature_extraction_engineering_params.get('corex_dim', 100)
-        tfidf = feature_extraction_engineering_params.get('tfidf', True)
-        tfidf_dim = feature_extraction_engineering_params.get('tfidf_dim', 10000)
-        bow = feature_extraction_engineering_params.get('bow', True)
-        bow_dim = feature_extraction_engineering_params.get('bow_dim', 10000)
-        ngram_range = feature_extraction_engineering_params.get('ngram_range', (1, 1))
-        split_data = feature_extraction_engineering_params.get('split_data', True)
-        split_prop = feature_extraction_engineering_params.get('split_prop', 0.3)
-        split_random_state = feature_extraction_engineering_params.get('split_random_state', 42)
-        text_column = feature_extraction_engineering_params.get('text_column', 'clean_text')
-        target_col = feature_extraction_engineering_params.get('target_col', 'target')
-        self.embeddings, self.test_embeddings = get_embeddings(self.df, text_column=text_column, target_col=target_col,
-                                                               split_data=split_data, split_prop=split_prop,
-                                                               split_random_state=split_random_state,
-                                                               corex=corex, corex_dim=corex_dim, tfidf=tfidf,
-                                                               tfidf_dim=tfidf_dim, bow=bow, bow_dim=bow_dim,
-                                                               ngram_range=ngram_range)
+    # def run_feature_extraction_engineering(self, feature_extraction_engineering_params: Dict[str, Any] = None):
+    #     """
+    #     Perform model pre-analysis on the text_column of the dataframe using the provided parameters
+    #     """
+    #     if not feature_extraction_engineering_params:
+    #         feature_extraction_engineering_params = {}
+    #     corex = feature_extraction_engineering_params.get('corex', True)
+    #     corex_dim = feature_extraction_engineering_params.get('corex_dim', 100)
+    #     tfidf = feature_extraction_engineering_params.get('tfidf', True)
+    #     tfidf_dim = feature_extraction_engineering_params.get('tfidf_dim', 10000)
+    #     bow = feature_extraction_engineering_params.get('bow', True)
+    #     bow_dim = feature_extraction_engineering_params.get('bow_dim', 10000)
+    #     ngram_range = feature_extraction_engineering_params.get('ngram_range', (1, 1))
+    #     split_data = feature_extraction_engineering_params.get('split_data', True)
+    #     split_prop = feature_extraction_engineering_params.get('split_prop', 0.3)
+    #     split_random_state = feature_extraction_engineering_params.get('split_random_state', 42)
+    #     text_column = feature_extraction_engineering_params.get('text_column', 'clean_text')
+    #     target_col = feature_extraction_engineering_params.get('target_col', 'target')
+    #     embeddings, test_embeddings = get_embeddings(self.df, text_column=text_column, target_col=target_col,
+    #                                                  split_data=split_data, split_prop=split_prop,
+    #                                                  split_random_state=split_random_state,
+    #                                                  corex=corex, corex_dim=corex_dim, tfidf=tfidf,
+    #                                                  tfidf_dim=tfidf_dim, bow=bow, bow_dim=bow_dim,
+    #                                                  ngram_range=ngram_range)
+    #     return embeddings, test_embeddings
 
-    def run_model_pre_analysis(self, model_pre_analysis_params: Dict[str, Any] = None):
-        """
-        Perform pre-model analysis on the dataframe using the provided parameters
-        """
-        if not model_pre_analysis_params:
-            model_pre_analysis_params = {}
-        correlation_matrix = model_pre_analysis_params.get('correlation_matrix', True)
-        tsne_plot = model_pre_analysis_params.get('tsne_plot', True)
-        top_n_pairplot = model_pre_analysis_params.get('top_n_pairplot', True)
-        chi_square_test_all_features = model_pre_analysis_params.get('chi_square_test_all_features', True)
-        top_n_features = model_pre_analysis_params.get('top_n_features', 200)
+    # def run_model_pre_analysis(self, model_pre_analysis_params: Dict[str, Any] = None):
+    #     """
+    #     Perform pre-model analysis on the dataframe using the provided parameters
+    #     """
+    #     if not model_pre_analysis_params:
+    #         model_pre_analysis_params = {}
+    #     correlation_matrix = model_pre_analysis_params.get('correlation_matrix', True)
+    #     tsne_plot = model_pre_analysis_params.get('tsne_plot', True)
+    #     top_n_pairplot = model_pre_analysis_params.get('top_n_pairplot', True)
+    #     chi_square_test_all_features = model_pre_analysis_params.get('chi_square_test_all_features', True)
+    #     top_n_features = model_pre_analysis_params.get('top_n_features', 200)
+    #
+    #     print(self.df[0:10])
+    #     pre_model_analysis = PreModelAnalysis(df=self.df, target_column=self.target_column,
+    #                                           top_n_features=top_n_features)
+    #     pre_model_analysis.run(correlation_matrix=correlation_matrix, tsne_plot=tsne_plot,
+    #                            top_n_pairplot=top_n_pairplot,
+    #                            chi_square_test_all_features=chi_square_test_all_features)
 
-        print(self.df[0:10])
-        pre_model_analysis = PreModelAnalysis(df=self.df, target_column=self.target_column,
-                                              top_n_features=top_n_features)
-        pre_model_analysis.run(correlation_matrix=correlation_matrix, tsne_plot=tsne_plot,
-                               top_n_pairplot=top_n_pairplot,
-                               chi_square_test_all_features=chi_square_test_all_features)
 
+# TO DO: add warning message when using sentiment with removing stop words
+# TO DO: add warning message when using cleaning and pp to present key sentences and LSA
+# TO DO: make sense of the FE + analyzing
+if __name__ == "main":
+    print("****")
+    # df1 = load_data_pirates().assign(target='chat_logs')
+    # df2 = load_data_king_arthur().assign(target='pirates')
+    # df = pd.concat([df1, df2])
+    #
+    # nlp = NLP(df, text_column='text1', target_column='target')
+    # print("hi")
+    # nlp.run_cleaning_text({"remove_stopwords": False})
+    # nlp.run_preprocessing()
+    # print(nlp.df[0:10])
+    # nlp.run_text_analyze()
+    # nlp.run_feature_extraction_engineering()
+
+    # nlp.run_model_pre_analysis()
+    # sw = get_stopwords()
+    # print('not' in sw)
