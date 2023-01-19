@@ -43,7 +43,8 @@ if __name__ == '__name__':
     cv_data = CVData(train_data=train_embedding, test_data=test_embedding)
     nlp = NLP(train_embedding, text_column='text', target_column='target')
 
-    FeatureAnalysis()
+    FeatureAnalysis(train_embedding, target_column='target').run()
+    print("woww")
     # best_model: ModelResults = ModelCycle(cv_data=cv_data, target_col='target').get_best_model()
 
     # # # # # Re
