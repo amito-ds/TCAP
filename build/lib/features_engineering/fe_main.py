@@ -10,7 +10,7 @@ from features_engineering.bag_of_words import get_bow_embedding
 from features_engineering.ner import get_ner_bow_embedding, classify_text
 from nltk.corpus import brown
 
-from cleaning.cleaning import clean_text
+from cleaning_chapter.cleaning import clean_text
 from preprocessing.preprocessing import preprocess_text
 from util import get_stopwords
 

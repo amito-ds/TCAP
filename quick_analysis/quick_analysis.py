@@ -3,7 +3,7 @@ import sys
 
 path = os.path.abspath("TCAP")
 sys.path.append(path)
-from cleaning import cleaning
+from cleaning_chapter import cleaning
 from data_loader.webtext_data import *
 from features_engineering.fe_main import get_embeddings
 from preprocessing.preprocessing import preprocess_df_text
@@ -31,7 +31,7 @@ port_stemmer = PorterStemmer()
 # get word net lemmatizer
 world_ner_lemmatizer = WordNetLemmatizer()
 
-# Default cleaning options
+# Default cleaning_chapter options
 default_cleaning_options = {
     'remove_punctuation_flag': True,
     'remove_numbers_flag': True,
@@ -94,7 +94,7 @@ def process_text(train_data: pd.DataFrame,
     embeddings_options = embeddings_options or default_embeddings_options
 
     # Clean the data
-    print_step_message("cleaning")
+    print_step_message("cleaning_chapter")
     train_data['clean_text'] = cleaning.clean_df_text(train_data[text_column], cleaning_options)
 
     # preprocess the text column
@@ -107,7 +107,7 @@ def process_text(train_data: pd.DataFrame,
         test_data = None
     else:
         # Clean the data
-        print_step_message("cleaning test set")
+        print_step_message("cleaning_chapter test set")
         test_data['clean_text'] = cleaning.clean_df_text(test_data[text_column], cleaning_options)
         # preprocess the test data
         print_step_message("preprocessing test set")

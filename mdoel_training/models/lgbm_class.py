@@ -1,6 +1,7 @@
 import logging
 
 import numpy as np
+import pandas as pd
 
 from mdoel_training.model_input_and_output_classes import ModelInput
 from mdoel_training.model_utils import organize_results
@@ -11,7 +12,6 @@ import lightgbm as lgb
 from typing import List
 
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support, recall_score, f1_score
-from sklearn.preprocessing import LabelBinarizer
 
 from mdoel_training.data_preparation import CVData, Parameter, ComplexParameter
 from typing import List, Dict
@@ -43,7 +43,7 @@ lgbm_class_default_parameters = [
 ]
 
 
-def train_lgbm(X_train, y_train, parameters: list[Parameter]):
+def train_lgbm(X_train: pd.DataFrame, y_train: pd.Series, parameters: list[Parameter]):
     """
     Trains a lightgbm model using the given parameters.
     :param X_train: The training data features
@@ -54,18 +54,14 @@ def train_lgbm(X_train, y_train, parameters: list[Parameter]):
     params = {}
     for param in parameters:
         params[param.name] = param.value
-    y_train = np.asarray(y_train)
 
     n_classes = len(np.unique(y_train))
-    if n_classes == 2:
-        params['objective'] = 'binary'
-        params['metric'] = 'binary_logloss'
-    else:
-        params['num_class'] = n_classes
-    print(params)
-    print(len(np.unique(y_train)))
-    print(type(y_train))
+    print(f"training lgbm with {n_classes} classes")
+    params['objective'] = 'multiclass'
+    params['metric'] = 'multi_logloss'
+    params['num_class'] = n_classes
     model = lgb.LGBMClassifier(**params)
+    print("training lables", y_train)
     model.fit(X_train, y_train, verbose=-1)
     return model
 
@@ -88,10 +84,7 @@ def score_lgbm(y, prediction, metric_funcs: List[callable]):
     :param metric_funcs: A list of evaluation metric functions
     :return: A dictionary of metric scores for each model
     """
-    label_binarizer = LabelBinarizer()
-    y = label_binarizer.fit_transform(y)
-    pred = label_binarizer.transform(prediction)
-    scores = {metric.__name__: metric(y, pred) for metric in metric_funcs}
+    scores = {metric.__name__: metric(y, prediction) for metric in metric_funcs}
     return scores
 
 
@@ -102,34 +95,23 @@ def lgbm_with_outputs(cv_data: CVData, parameters: list[Parameter], target_col: 
         metric_funcs = [accuracy_score, precision_recall_fscore_support, recall_score, f1_score]
     if not parameters:
         parameters = lgbm_class_default_parameters
-    for i, (train_index, test_index) in enumerate(cv_data.splits):
-        X_train, X_test = cv_data.train_data.iloc[train_index], cv_data.train_data.iloc[test_index]
-        y_train, y_test = X_train[target_col], X_test[target_col]
-        X_train = X_train.drop(columns=[target_col])
-        X_test = X_test.drop(columns=[target_col])
+    for i, (train, test) in enumerate(cv_data.splits):
+        X_train, y_train = train.drop(target_col, axis=1).reset_index(drop=True), train[target_col]
+        X_test, y_test = test.drop(target_col, axis=1).reset_index(drop=True), test[target_col]
+        # train lgbm model
         model = train_lgbm(X_train, y_train, parameters)
+        print("trained model", model)
+        print("X_train", X_train[0:3])
+        print("y_train", y_train[0:3])
+        print("types", type(X_train), type(y_train))
+        print("what", model.predict(X_train)[0:10])
         train_pred = predict_lgbm(model, X_train)
         test_pred = predict_lgbm(model, X_test)
-
         train_scores = score_lgbm(y_train, train_pred, metric_funcs)
         test_scores = score_lgbm(y_test, test_pred, metric_funcs)
-
         results.append(
             {'type': 'train', 'fold': i, **{param.name: param.value for param in parameters}, **train_scores})
         results.append({'type': 'test', 'fold': i, **{param.name: param.value for param in parameters}, **test_scores})
-
-    model = train_lgbm(cv_data.train_data.drop(columns=[target_col]), cv_data.train_data[target_col], parameters)
-    for i, (train_index, test_index) in enumerate(cv_data.splits):
-        X_train, X_test = cv_data.train_data.iloc[train_index], cv_data.train_data.iloc[test_index]
-    y_train, y_test = X_train[target_col], X_test[target_col]
-    X_train = X_train.drop(columns=[target_col])
-    X_test = X_test.drop(columns=[target_col])
-    train_pred = predict_lgbm(model, X_train)
-    test_pred = predict_lgbm(model, X_test)
-    train_scores = score_lgbm(y_train, train_pred, metric_funcs)
-    test_scores = score_lgbm(y_test, test_pred, metric_funcs)
-    results.append({'type': 'train', 'fold': i, **{param.name: param.value for param in parameters}, **train_scores})
-    results.append({'type': 'test', 'fold': i, **{param.name: param.value for param in parameters}, **test_scores})
     return results, model, parameters
 
 
@@ -154,7 +136,8 @@ def lgbm_grid_search(cv_data: CVData, parameters: List[ComplexParameter], target
 
 
 def lgbm_class_hp(inputs: ModelInput):
-    results, _, _ = lgbm_with_outputs(inputs.cv_data, inputs.parameters, inputs.target_col)
+    label_encoder = inputs.get_label_encoder()
+    results, _, _ = lgbm_with_outputs(inputs.cv_data, inputs.parameters, inputs.target_col, label_encoder=label_encoder)
     results = organize_results(results)
     results.drop([p.name for p in inputs.parameters], axis=1, inplace=True)
     results = results.loc[results['type'] == 'test']

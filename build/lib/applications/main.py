@@ -1,7 +1,7 @@
 import pandas as pd
 from nltk.corpus import brown
 
-from cleaning.cleaning import *
+from cleaning_chapter.cleaning import *
 from preprocessing.preprocessing import preprocess_text
 from text_analyzer.corex_topics import get_top_words
 from util import get_stopwords

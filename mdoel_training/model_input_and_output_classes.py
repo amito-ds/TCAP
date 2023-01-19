@@ -1,31 +1,34 @@
-import pandas as pd
 from typing import List
 
-from mdoel_training.data_preparation import Parameter, CVData
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import LogisticRegression, LinearRegression
+import pandas as pd
 
-from mdoel_training.model_utils import organize_results
+from mdoel_training.data_preparation import Parameter, CVData
 
 
 class ModelResults:
-    def __init__(self, model_name: str, model, results: pd.DataFrame, parameters: List, predictions: pd.Series):
+    def __init__(self,
+                 model_name: str,
+                 model, results: pd.DataFrame,
+                 parameters: List,
+                 predictions: pd.Series,
+                 cv_data: CVData):
         self.model_name = model_name
         self.model = model
         self.results = results
         self.parameters = parameters
         self.predictions = predictions
+        self.cv_data = cv_data
 
     def aggregate_results(self):
-        # Remove columns that appear in parameters
-        # param_cols = [param.name for param in self.parameters]
-        # self.results.drop(columns=param_cols, inplace=True)
-
-        # Aggregate over folds
         aggregate_df = self.results.groupby(['type']).mean()
         aggregate_df.reset_index(inplace=True)
 
         return aggregate_df
+
+    def print(self):
+        print("printing ModelResults")
+        print("model name", self.model_name)
+        print("model type", type(self.model))
 
 
 class ModelInput:

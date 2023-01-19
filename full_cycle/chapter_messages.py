@@ -11,7 +11,7 @@ CREATE_EMBEDDING_EMOJIS = ["📚", "🔬", "🧠", "🔍"]
 
 def chapter_message(chapter_name: str, prefix=" Running chapter: "):
     stars = '*' * (len(chapter_name + prefix) + 12)
-    if chapter_name == 'cleaning':
+    if chapter_name == 'cleaning_chapter':
         emoji = random.choice(CLEANING_EMOJIS)
     elif chapter_name == 'preprocessing':
         emoji = random.choice(PREPROCESSING_EMOJIS)

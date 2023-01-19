@@ -59,7 +59,7 @@ def clean_text(text: str,
                remove_accented_characters_flag: bool = True,
                remove_special_characters_flag: bool = True,
                remove_html_tags_flag: bool = True) -> str:
-    """Apply a series of cleaning functions to the given text.
+    """Apply a series of cleaning_chapter functions to the given text.
 
     text: the text to clean.
     remove_punctuation_flag: a flag indicating whether to remove punctuation from the text.

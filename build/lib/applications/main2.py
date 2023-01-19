@@ -2,7 +2,7 @@ import nltk
 import pandas as pd
 from nltk.corpus import brown
 
-from cleaning.cleaning import *
+from cleaning_chapter.cleaning import *
 from data_loader.webtext_data import *
 from preprocessing.preprocessing import preprocess_text
 from text_analyzer.sentiment import *

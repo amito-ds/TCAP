@@ -56,14 +56,13 @@ def predict_baseline(model, X):
     return model.transform(X)
 
 
-def baseline_with_outputs(cv_data: CVData, target_col: str, baseline_num=None, percentile=None,
-                          metric_funcs: List[callable] = None):
+def baseline_with_outputs(cv_data: CVData, target_col: str, baseline_num=None, percentile=None, metric_funcs: List[callable] = None):
     results = []
     if not metric_funcs:
         metric_funcs = [accuracy_score, precision_recall_fscore_support, recall_score, f1_score]
-    for i, (train_index, test_index) in enumerate(cv_data.splits):
-        X_train, X_test = cv_data.train_data.iloc[train_index], cv_data.train_data.iloc[test_index]
-        y_train, y_test = X_train[target_col], X_test[target_col]
+    for i, (train, test) in enumerate(cv_data.splits):
+        X_train, y_train = train.drop(target_col, axis=1), train[target_col]
+        X_test, y_test = test.drop(target_col, axis=1), test[target_col]
         model = train_baseline(X_train, y_train, baseline_num, percentile)
         prediction = predict_baseline(model, X_test)
         prediction_train = predict_baseline(model, X_train)
@@ -72,3 +71,4 @@ def baseline_with_outputs(cv_data: CVData, target_col: str, baseline_num=None, p
         scores = score_lgbm(y_train, prediction_train, metric_funcs)
         results.append({'type': 'train', 'fold': i, **scores})
     return results, model
+

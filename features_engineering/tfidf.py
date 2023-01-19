@@ -5,12 +5,12 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 
 import pandas as pd
 
-from cleaning.cleaning import clean_text
+from cleaning_chapter.cleaning import clean_text
 from preprocessing.preprocessing import preprocess_text, get_stemmer
 from util import get_stopwords
 
 
-def get_tfidf_embedding(train_df: pd.DataFrame, text_column: str = 'clean_text', test_df: pd.DataFrame = None,
+def get_tfidf_embedding(train_df: pd.DataFrame, text_column: str = 'text', test_df: pd.DataFrame = None,
                         ngram_range: Tuple[int, int] = (1, 1), embedding_size=10000):
     """
     Creates a TF-IDF embedding for the text data in the given DataFrames.

@@ -2,7 +2,7 @@ import pandas as pd
 import spacy
 from nltk.corpus import brown
 
-from cleaning.cleaning import clean_text
+from cleaning_chapter.cleaning import clean_text
 from preprocessing.preprocessing import preprocess_text
 from util import get_stopwords
 import numpy as np
@@ -61,43 +61,3 @@ def get_ner_bow_embedding(training_data: pd.DataFrame, class_col="class", embedd
 
 # Define a function to create an embedding for the named entities in text data
 
-
-if __name__ == '__main__':
-
-    brown_sent = brown.sents(categories='reviews')[:100]
-    brown_sent = [' '.join(x) for x in brown_sent]
-    df = pd.DataFrame({'text': brown_sent})
-
-    # Clean the text column
-    df['text'] = df['text'].apply(lambda x: clean_text(x,
-                                                       remove_stopwords_flag=True,
-                                                       stopwords=get_stopwords()))
-
-    # preprocess the text column
-    df['clean_text'] = df['text'].apply(lambda x: preprocess_text(x, stem_flag=False))
-
-    df["class"] = df["clean_text"].apply(classify_text)
-
-    # Print the resulting classification for each text element
-    print(df["class"])
-
-    # Calculate the normalized BOW representation for the "texas" class
-
-    bow_nor = get_ner_bow_embedding(df, "class", embedding_size=3)
-    print(np.sum(bow_nor ** 2, axis=1))
-    print(bow_nor[0:10])
-
-    # Print the resulting DataFrame
-    # print(df)d
-
-    # Create an embedding for the "class" column of the DataFrame
-
-    # Calculate the category counts
-    # class_counts = df["class"].value_counts()
-    #
-    # # Plot the category counts as a bar chart
-    # plt.bar(class_counts.index, class_counts.values)
-    # plt.xlabel("Category")
-    # plt.ylabel("Count")
-    # plt.title("Category Statistics")
-    # plt.show()

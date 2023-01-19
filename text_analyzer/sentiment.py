@@ -28,9 +28,9 @@ def report_sentiment_stats(sentiment_df: pd.DataFrame) -> Dict[str, Union[int, f
     }
 
 
-def analyze_sentiment(df):
+def analyze_sentiment(df, text_col='text'):
     # Add a new column to the DataFrame with the sentiment of each text
-    df['sentiment'] = df['text'].apply(lambda x: TextBlob(x).sentiment.polarity)
+    df['sentiment'] = df[text_col].apply(lambda x: TextBlob(x).sentiment.polarity)
 
     return df
 

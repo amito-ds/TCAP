@@ -1,6 +1,6 @@
 import pandas as pd
 
-from cleaning.cleaning import clean_text
+from cleaning_chapter.cleaning import clean_text
 from data_loader.webtext_data import load_data_pirates, load_data_king_arthur
 from features_engineering.fe_main import get_embeddings
 from mdoel_training.best_model import ModelCycle
@@ -11,7 +11,7 @@ from text_analyzer import smart_text_analyzer
 from util import get_stopwords
 import pandas as pd
 
-from cleaning.cleaning import clean_text
+from cleaning_chapter.cleaning import clean_text
 from data_loader.webtext_data import load_data_pirates, load_data_king_arthur
 from features_engineering.fe_main import get_embeddings
 from mdoel_training.best_model import ModelCycle

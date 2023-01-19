@@ -2,9 +2,9 @@ from typing import Any, Dict
 
 import pandas as pd
 
-from cleaning.cleaning import clean_text
+from cleaning_chapter.cleaning import clean_text
 from data_loader.webtext_data import load_data_pirates, load_data_king_arthur
-from feature_analyzing.feature_correlation import PreModelAnalysis
+from feature_analyzing.feature_correlation import FeatureAnalysis
 from features_engineering.fe_main import get_embeddings
 from preprocessing.preprocessing import preprocess_text, get_stemmer
 from text_analyzer.smart_text_analyzer import analyze_text
@@ -19,7 +19,7 @@ class NLP:
 
     def run_cleaning_text(self, cleaning_params: Dict[str, Any] = None):
         """
-        Perform text cleaning on the text_column of the dataframe using the provided parameters
+        Perform text cleaning_chapter on the text_column of the dataframe using the provided parameters
         """
         if not cleaning_params:
             cleaning_params = {}
@@ -134,8 +134,8 @@ class NLP:
         top_n_features = model_pre_analysis_params.get('top_n_features', 200)
 
         print(self.df[0:10])
-        pre_model_analysis = PreModelAnalysis(df=self.df, target_column=self.target_column,
-                                              top_n_features=top_n_features)
+        pre_model_analysis = FeatureAnalysis(df=self.df, target_column=self.target_column,
+                                             top_n_features=top_n_features)
         pre_model_analysis.run(correlation_matrix=correlation_matrix, tsne_plot=tsne_plot,
                                top_n_pairplot=top_n_pairplot,
                                chi_square_test_all_features=chi_square_test_all_features)

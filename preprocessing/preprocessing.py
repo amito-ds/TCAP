@@ -55,10 +55,14 @@ port_stemmer = PorterStemmer()
 world_ner_lemmatizer = WordNetLemmatizer()
 
 
+# def stem(words, stemmer=port_stemmer):
+#     print("stemmer words", words)
+#     stemmed_words = [stemmer.stem(word) for word in words]
+#     return stemmed_words
+
 def stem(words, stemmer=port_stemmer):
     stemmed_words = [stemmer.stem(word) for word in words]
     return stemmed_words
-
 
 def preprocess_df_text(text_column, preprocessing_options: dict):
     print_preprocessing_options(**preprocessing_options)
@@ -93,7 +97,7 @@ def preprocess_text(text, stemmer=None, lemmatizer=None, stem_flag=False, lemmat
     else:
         pos_tags = tokens
     if stem_flag:
-        stemmer = stemmer if stemmer is not None else PorterStemmer
+        stemmer = stemmer if stemmer is not None else PorterStemmer()
         stemmed_words = stem(pos_tags, stemmer=stemmer)
     else:
         stemmed_words = pos_tags

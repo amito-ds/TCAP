@@ -8,8 +8,11 @@ from features_engineering.tfidf import get_tfidf_embedding
 
 def get_embeddings(training_data: pd.DataFrame,
                    test_data: pd.DataFrame = None,
-                   split_data: bool = True, split_prop: float = 0.3, split_random_state=42,
-                   text_column="clean_text", target_col='target',
+                   split_data: bool = True,
+                   split_prop: float = 0.3,
+                   split_random_state=42,
+                   text_column: str = "text",
+                   target_column: str = None,
                    corex=True, corex_dim=100, tfidf=True, tfidf_dim=10000, bow=True, bow_dim=10000,
                    ngram_range=(1, 1)):
     if split_data:
@@ -32,9 +35,11 @@ def get_embeddings(training_data: pd.DataFrame,
     # Extract Corex topic model embeddings if requested
     if corex:
         print(f"{order_list[i]}, Extracting Corex topic model embeddings with dimension {corex_dim}")
-        corex_embedding, corex_test_embedding = get_corex_embedding(training_data=training_data, test_data=test_data,
+        corex_embedding, corex_test_embedding = get_corex_embedding(training_data=training_data,
+                                                                    test_data=test_data,
                                                                     ngram_range=ngram_range,
-                                                                    n_topics=corex_dim, text_column=text_column)
+                                                                    n_topics=corex_dim,
+                                                                    text_column=text_column)
         i += 1
 
     # Extract TF-IDF embeddings if requested
@@ -59,41 +64,15 @@ def get_embeddings(training_data: pd.DataFrame,
     embeddings = pd.concat([corex_embedding, tfidf_embedding, ner_bow_embedding, bow_embedding], axis=1)
     test_embeddings = pd.concat(
         [corex_test_embedding, tfidf_test_embedding, ner_bow_test_embedding, bow_test_embedding], axis=1)
+    ## add the label if its not null
+    if not (not target_column):
+        test_embeddings = pd.merge(test_embeddings, test_data[[target_column]], left_index=True, right_index=True)
+        embeddings = pd.merge(embeddings, training_data[[target_column]], left_index=True, right_index=True)
 
-    # # adding the label to train and test embedding
     training_data.reset_index(drop=True, inplace=True)
     embeddings.reset_index(drop=True, inplace=True)
-    embeddings = pd.concat([embeddings, training_data[target_col]], axis=1)
 
     test_data.reset_index(drop=True, inplace=True)
     test_embeddings.reset_index(drop=True, inplace=True)
-    test_embeddings = pd.concat([test_embeddings, test_data[target_col]], axis=1)
     print(f"Lastly, All embeddings have been concatenated")
     return embeddings, test_embeddings
-
-# def get_embeddings(df, text_column="clean_text", corex=True, corex_dim=10, tfidf=True, tfidf_dim=10000,
-#                    bow=True, bow_dim=10000,
-#                    ngram_range=(1, 1)):
-#     # Define empty DataFrames for the embeddings
-#     corex_embedding = pd.DataFrame()
-#     tfidf_embedding = pd.DataFrame()
-#     bow_embedding = pd.DataFrame()
-#     ner_bow_embedding = pd.DataFrame()
-#
-#     # Extract Corex topic model embeddings if requested
-#     if corex:
-#         corex_embedding = get_corex_embedding(df, ngram_range=ngram_range, n_topics=corex_dim, text_column=text_column)
-#
-#     # Extract TF-IDF embeddings if requested
-#     if tfidf:
-#         tfidf_embedding, _, _ = get_tfidf_embedding(df, ngram_range=ngram_range, embedding_size=tfidf_dim,
-#                                                     text_column=text_column)
-#
-#     # Extract bag-of-words embeddings if requested
-#     if bow:
-#         bow_embedding, _, _ = get_bow_embedding(df, ngram_range=ngram_range, embedding_size=bow_dim,
-#                                                 text_column=text_column)
-#
-#     # Concatenate the embeddings and return them
-#     embeddings = pd.concat([corex_embedding, tfidf_embedding, ner_bow_embedding, bow_embedding], axis=1)
-#     return embeddings

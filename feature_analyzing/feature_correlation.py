@@ -1,12 +1,14 @@
+import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
+from scipy import stats
 from scipy.stats import chi2_contingency
 from sklearn.preprocessing import LabelEncoder
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 
-from cleaning.cleaning import clean_text
+from cleaning_chapter.cleaning import clean_text
 from data_loader.webtext_data import load_data_pirates, load_data_king_arthur
 from features_engineering.fe_main import get_embeddings
 from mdoel_training.best_model import ModelCycle
@@ -49,9 +51,23 @@ However, it's important to consider the context of the problem and the domain kn
 the correlation matrix.
 """
 
+pvalues_message = """
+The p-values plot is a visualization tool that is used to determine the significance of each feature in the dataset.
+The plot shows the distribution of p-values calculated using the chi-squared test for independence.
+A low p-value (typically less than 0.05) indicates that there is a significant association between the feature and the target label.
+Low p-values can potentially indicate a strong relationship, but not always, and vice versa.
+It's important to also consider other factors and features when interpreting the results.
+"""
 
-class PreModelAnalysis:
-    def __init__(self, df: pd.DataFrame, target_column: str = 'target', top_n_features: int = 200):
+pairplot_message = """
+The pairplot helps to visualize the relationships between different features in the dataset. 
+It shows scatter plots of sampled features and their distribution. 
+This can help identify patterns or outliers in the data. 
+"""
+
+
+class FeatureAnalysis:
+    def __init__(self, df: pd.DataFrame, target_column: str = None, top_n_features: int = 200):
         self.df = df
         self.target_column = target_column
         self.is_model = not (not target_column)
@@ -85,27 +101,39 @@ class PreModelAnalysis:
     def tsne_plot(self, n_components=2, perplexity=30.0, n_iter=1000):
         print(tsne_plot_message)
         from sklearn.manifold import TSNE
+        from sklearn.preprocessing import LabelEncoder
         X = self.df.drop(columns=self.target_column)
         y = self.df[self.target_column]
         tsne = TSNE(n_components=n_components, perplexity=perplexity, n_iter=n_iter)
         X_tsne = tsne.fit_transform(X)
+        le = LabelEncoder()
+        y = le.fit_transform(y)
         plt.scatter(X_tsne[:, 0], X_tsne[:, 1], c=y)
         plt.title("t-SNE Plot of Features and Target Label")
         plt.show()
 
     def top_n_pairplot(self, N=4, trimming_left=0.05, trimming_right=0.05):
+        print(pairplot_message)
         if trimming_left > 0:
             print(f"left trimming {100 * trimming_left}% ")
         if trimming_right > 0:
             print(f"right trimming {100 * trimming_right}% ")
         import seaborn as sns
-        corr = self.df.corr()
-        top_n_features = corr.nlargest(N, self.target_column).index
-        top_n_features = top_n_features.drop(self.target_column)
-        X = self.df[top_n_features]
-        X = X.dropna()
-        X = X[(X > X.quantile(trimming_left)) & (X < X.quantile(1 - trimming_right))]
-        sns.pairplot(X)
+        X = self.df.drop(columns=self.target_column)
+        y = self.df[self.target_column]
+
+        if y.dtype == 'object':
+            kendall_corr = []
+            for col in X.columns:
+                kendall_corr.append(stats.kendalltau(X[col], y)[0])
+            top_n_features = [X.columns[i] for i in np.argsort(kendall_corr)[-N:]]
+            X_top_n = X[top_n_features]
+            X_top_n[self.target_column] = y
+            sns.pairplot(X_top_n, hue=self.target_column)
+        else:
+            corr = X.corrwith(y)
+            top_n_features = corr.nlargest(N).index
+            sns.pairplot(X[top_n_features])
         plt.show()
 
     def chi_square_test(self, feature):
@@ -125,7 +153,6 @@ class PreModelAnalysis:
         pvalues = {}
         for feature in self.df.columns:
             if feature != self.target_column:
-
                 X = self.df[[feature]]
                 kmeans = KMeans(n_clusters=k)
                 kmeans.fit(X)
@@ -136,17 +163,24 @@ class PreModelAnalysis:
         return pvalues
 
     def plot_pvalues(self, threshold=20):
+        print(pvalues_message)
+        """
+        Plots the histogram of p-values of chi-square test of independence between all features and the target column.
+        Only features with at least threshold observations will be included in the plot.
+
+        Parameters:
+        threshold (int): Minimum number of observations required for a feature to be included in the plot. Default is 20.
+        """
         if not self.is_model:
             pass
         pvalues = self.chi_square_test_all_features()
         if len(pvalues) < threshold:
             print(f"Number of features is less than {threshold}. Not enough data for histogram plot.")
             pass
-        import matplotlib.pyplot as plt
-        plt.hist(list(pvalues.values()), bins=20)
+        sns.histplot(list(pvalues.values()), bins=20)
         plt.xlabel("p-values")
         plt.ylabel("Frequency")
-        plt.title("Histogram of p-values")
+        plt.title("Histogram of p-values of Chi-Square Test of Independence (Feature X label)")
         plt.show()
 
     def feature_correlation(self):
@@ -159,13 +193,19 @@ class PreModelAnalysis:
         # if regression: plot correlation table, heatmap. last column is the target. choose the right correlation metric for this problem
         # if calssification:plot correlation table, heatmap. last column is the target. choose the right correlation metric for this problem
 
-    def run(self, correlation_matrix=True, tsne_plot=True, top_n_pairplot=True, chi_square_test_all_features=True):
+    def run(self,
+            correlation_matrix=True,
+            tsne_plot=True,
+            top_n_pairplot=True,
+            chi_square_test_all_features=True):
         if correlation_matrix:
             self.correlation_matrix()
         if tsne_plot:
-            self.tsne_plot()
+            if not (not self.target_column):
+                self.tsne_plot()
         if top_n_pairplot:
-            self.top_n_pairplot()
+            if not (not self.target_column):
+                self.top_n_pairplot()
         if chi_square_test_all_features:
             self.plot_pvalues()
 
@@ -173,45 +213,3 @@ class PreModelAnalysis:
         variances = self.df.var()
         top_features = variances.sort_values(ascending=False).head(n).index
         return top_features
-
-
-# train_embedding = pd.read_csv("train_embedding.csv")
-# test_embedding = pd.read_csv("test_embedding.csv")
-# train_embedding = train_embedding.drop(train_embedding.columns[0], axis=1)
-# test_embedding = test_embedding.drop(test_embedding.columns[0], axis=1)
-df1 = load_data_pirates().assign(target='chat_logs')
-df2 = load_data_king_arthur().assign(target='pirates')
-df = pd.concat([df1, df2])
-#
-# # # Clean the text column
-get_sw = get_stopwords()
-df['text'] = df['text'].apply(lambda x: clean_text(x,
-                                                   remove_stopwords_flag=True,
-                                                   stopwords=get_sw))
-#
-# # preprocess the text column
-df['clean_text'] = df['text'].apply(lambda x:
-                                    preprocess_text(x, stemmer=get_stemmer('porter'), stem_flag=True))
-#
-# #
-train_embedding, test_embedding = get_embeddings(training_data=df, corex=True, tfidf=True, bow=True, corex_dim=50)
-
-#
-# print(train_embedding.shape)
-# print(test_embedding.shape)
-#
-target_col = 'target'
-label_encoder = LabelEncoder()
-train_embedding[target_col] = label_encoder.fit_transform(train_embedding[target_col])
-test_embedding[target_col] = label_encoder.transform(test_embedding[target_col])
-
-# print(train_embedding.shape[1])
-
-pma = PreModelAnalysis(train_embedding, target_column=target_col)
-print(pma.is_model)
-print(pma.get_model_type())
-# cor = pma.correlation_matrix()
-# pma.tsne_plot(n_components=2)
-# pma.top_n_pairplot(N=5, trimming_right=0.2, trimming_left=0)
-# print(pma.plot_pvalues(threshold=5))
-print(pma.run())

@@ -1,11 +1,7 @@
+import re
 import string
 import unicodedata
-import re
 from typing import List
-
-import string
-
-import pandas as pd
 
 from util import get_stopwords
 
@@ -106,7 +102,7 @@ def clean_text(text: str,
                remove_accented_characters_flag: bool = True,
                remove_special_characters_flag: bool = True,
                remove_html_tags_flag: bool = True) -> str:
-    """Apply a series of cleaning functions to the given text.
+    """Apply a series of cleaning_chapter functions to the given text.
 
     text: the text to clean.
     remove_punctuation_flag: a flag indicating whether to remove punctuation from the text.
@@ -132,7 +128,8 @@ def clean_text(text: str,
     if lowercase_flag:
         text = lowercase(text)
     if remove_stopwords_flag:
-        stopwords = get_stopwords()
+        if not stopwords:
+            stopwords = get_stopwords()
         text = remove_stopwords(text, stopwords)
     if remove_accented_characters_flag:
         text = remove_accented_characters(text)
@@ -141,3 +138,6 @@ def clean_text(text: str,
     if remove_html_tags_flag:
         text = remove_html_tags(text)
     return text
+
+
+

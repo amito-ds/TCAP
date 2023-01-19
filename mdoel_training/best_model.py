@@ -12,8 +12,11 @@ from model_compare.compare_messages import compare_models_by_type_and_parameters
 
 
 class ModelCycle:
-    def __init__(self, cv_data: CVData, parameters: List[Parameter] = None, target_col: str = 'target',
-                 metric_funcs: List[callable] = None):
+    def __init__(self, cv_data: CVData,
+                 parameters: List[Parameter] = None,
+                 target_col: str = 'target',
+                 metric_funcs: List[callable] = None
+                 ):
         self.cv_data = cv_data
         self.parameters = parameters
         self.target_col = target_col
@@ -31,6 +34,7 @@ class ModelCycle:
     def get_best_model(self):
         # getting results from model training
         models_results_regression, models_results_classification = self.running_all_models()
+        print("type wpw", type(models_results_classification[0]))
         compare_models_by_type_and_parameters(models_results_classification)  # get init message
         if len(models_results_classification) > 1:
             print("classification results")
@@ -44,24 +48,21 @@ class ModelCycle:
         test_results = \
             [model_result.aggregate_results()[model_result.aggregate_results()['type'] == "test"] for model_result in
              model_results]
+        for res in test_results:
+            print("test res", res)
         metric_names = test_results[0].columns.tolist()
         metric_names.pop(0)
         metric_names.pop(0)
         print("metric_names", metric_names)
         for i, metric_name in enumerate(metric_names):
             is_higher_better = is_metric_higher_better(metric_name)
-            if is_higher_better:
-                metric_values = [round(result[metric_name].values[0], decimal_points) for result in test_results]
-                sorted_models = [model for _, model in sorted(zip(metric_values, model_results), reverse=True)]
-                if i == 0:
-                    best_model = sorted_models[0]
-            else:
-                metric_values = [round(result[metric_name].values[0], decimal_points) for result in test_results]
-                sorted_models = [model for _, model in sorted(zip(metric_values, model_results))]
-                if i == 0:
-                    best_model = sorted_models[0]
+            metric_values = [round(result[metric_name].values[0], decimal_points) for result in test_results]
+            model_results = [x for _, x in sorted(zip(metric_values, model_results), key=lambda pair: pair[0],
+                                                  reverse=is_higher_better)]
+            if i == 0:
+                best_model = model_results[0]
             print(f"The best models for {metric_name} metric are: ")
-            for i, model in enumerate(sorted_models):
+            for i, model in enumerate(model_results):
                 print(f"{i + 1}. {model.model_name} with value: {metric_values[i]}")
         return best_model
 
@@ -69,27 +70,36 @@ class ModelCycle:
         models_results_classification: list[ModelResults] = []
         models_results_regression: list[ModelResults] = []
         is_regression, is_classification = self.determine_problem_type()
+
         if is_regression:
-            print("Considering the inputs, running regression model")
+            # print("Considering the inputs, running regression model")
             pass
         if is_classification:
-            # label_encoder = LabelEncoder()
-            # label_encoder = label_encoder.fit(self.cv_data.train_data[self.target_col])
             print("Considering the inputs, running classification model")
             results1, model1 = baseline_with_outputs(
                 cv_data=self.cv_data, target_col=self.target_col, metric_funcs=self.metric_funcs)
-            results2, model2, lgbm_parameters = lgbm_with_outputs(
-                cv_data=self.cv_data, parameters=self.parameters, target_col=self.target_col,
-                metric_funcs=self.metric_funcs)
+            model_res1: ModelResults = ModelResults("baseline", model1, pd.DataFrame(results1), [],
+                                                    predictions=pd.Series(), cv_data=self.cv_data)
+
+            print("summary of results")
+            print("bsaeline")
+            print(model_res1.aggregate_results())
+            # results2, model2, lgbm_parameters = lgbm_with_outputs(
+            #     cv_data=self.cv_data, parameters=self.parameters, target_col=self.target_col,
+            #     metric_funcs=self.metric_funcs)
             results3, model3, logistic_regression_parameters = logistic_regression_with_outputs(
                 cv_data=self.cv_data, parameters=self.parameters, target_col=self.target_col, metric_funcs=None)
-            model_res1: ModelResults = ModelResults("baseline", model1, pd.DataFrame(results1), [],
-                                                    predictions=pd.Series())
-            model_res2: ModelResults = ModelResults("lgbm", model2, pd.DataFrame(results2), lgbm_parameters,
-                                                    predictions=pd.Series())
+
+            # model_res2: ModelResults = ModelResults("lgbm", model2, pd.DataFrame(results2), lgbm_parameters,
+            #                                         predictions=pd.Series(), cv_data=self.cv_data)
             model_res3: ModelResults = ModelResults("logistic regression", model3, pd.DataFrame(results3),
-                                                    logistic_regression_parameters, predictions=pd.Series())
-            models_results_classification = [model_res1, model_res2, model_res3]
+                                                    logistic_regression_parameters, predictions=pd.Series(),
+                                                    cv_data=self.cv_data)
+
+            print("lr")
+            print(model_res3.aggregate_results())
+            models_results_classification = [model_res1, model_res3]
+            # models_results_classification = [model_res1, model_res2, model_res3]
             # models_results_classification = [model_res2]
         return models_results_regression, models_results_classification
 
