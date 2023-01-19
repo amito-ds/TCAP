@@ -73,7 +73,7 @@ class FeatureAnalysis:
         self.is_model = not (not target_column)
         if top_n_features:
             self.df = self.df[self.select_top_variance_features(top_n_features)]
-        if target_column:
+        if not (not target_column):
             self.df[target_column] = df[target_column]
 
     def get_model_type(self, class_threshold: int = 2):
@@ -98,7 +98,7 @@ class FeatureAnalysis:
         plt.show()
         return corr
 
-    def tsne_plot(self, n_components=2, perplexity=30.0, n_iter=1000):
+    def tsne_plot(self, n_components=3, perplexity=30.0, n_iter=1000):
         print(tsne_plot_message)
         from sklearn.manifold import TSNE
         from sklearn.preprocessing import LabelEncoder
@@ -198,8 +198,9 @@ class FeatureAnalysis:
             tsne_plot=True,
             top_n_pairplot=True,
             chi_square_test_all_features=True):
-        if correlation_matrix:
-            self.correlation_matrix()
+        # TODO remove comment
+        # if correlation_matrix:
+        #     self.correlation_matrix()
         if tsne_plot:
             if not (not self.target_column):
                 self.tsne_plot()

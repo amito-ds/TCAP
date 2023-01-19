@@ -17,8 +17,8 @@ class LogisticRegressionModel:
     def get_default_parameters(self):
 
         return [
-            # Parameter(name='penalty', value='l2'),
-            # Parameter(name='C', value=1.0),
+            Parameter(name='penalty', value='l2'),
+            Parameter(name='C', value=1.0),
             Parameter(name='solver', value='lbfgs'),
             Parameter(name='max_iter', value=500)
         ]

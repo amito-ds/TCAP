@@ -1,6 +1,7 @@
 from typing import List
 
 import pandas as pd
+from nltk.corpus import brown
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 
@@ -46,7 +47,7 @@ class CleanText:
                  remove_whitespace_flag: bool = True,
                  remove_empty_line_flag: bool = True,
                  lowercase_flag: bool = True,
-                 remove_stopwords_flag: bool = True,
+                 remove_stopwords_flag: bool = False,
                  stopwords: List[str] = None,
                  remove_accented_characters_flag: bool = True,
                  remove_special_characters_flag: bool = True,
@@ -136,8 +137,8 @@ class FeatureEngineering:
                  split_prop: float = 0.3,
                  split_random_state=42,
                  text_column='text', target_col='target',
-                 corex=True, corex_dim=100, tfidf=True, tfidf_dim=1000, bow=True, bow_dim=1000,
-                 ngram_range=(1, 2)):
+                 corex=True, corex_dim=100, tfidf=True, tfidf_dim=100, bow=True, bow_dim=100,
+                 ngram_range=(1, 3)):
         self.nlp = nlp
         self.training_data = training_data
         self.test_data = test_data
@@ -159,9 +160,7 @@ class FeatureEngineering:
         return df
 
     def run_feature_engineering(self):
-        self.nlp.df = self.convert_target_to_numerical()
-        # print("values:", self.nlp.df[self.target_col])
-        # self.nlp.df[self.target_col] = LabelEncoder().fit_transform(self.nlp.df[self.target_col])
+        # self.nlp.df = self.convert_target_to_numerical()
         if self.split_data:
             self.training_data, self.test_data = train_test_split(self.nlp.df, test_size=self.split_prop,
                                                                   random_state=self.split_random_state)
@@ -266,7 +265,8 @@ class TCAP:
                  text_stats: TextAnalyzer = None,
                  feature_engineering: FeatureEngineering = None,
                  pre_model_analysis: PreModelAnalysis = None,
-                 model_training: ModelTraining = None, cv_data: CVData = None):
+                 model_training: ModelTraining = None,
+                 cv_data: CVData = None):
         self.nlp = nlp
         self.clean_text = clean_text or get_default_clean_text(self.nlp)
         self.preprocessing = preprocessing or get_default_preprocess_text(self.nlp)
@@ -284,7 +284,7 @@ class TCAP:
             is_preprocess_text: bool = True,
             is_text_stats: bool = False,
             is_feature_extraction: bool = True,
-            is_feature_analysis: bool = False,
+            is_feature_analysis: bool = True,
             is_train_model: bool = False,
             is_model_analysis: bool = True):
         if is_clean_text:
@@ -303,21 +303,34 @@ class TCAP:
 
 
 print("start...")
-### get data
-df1 = load_data_chat_logs().assign(target='chat_logs')
-print("logs:", df1.shape[0])
-df2 = load_data_pirates().assign(target='pirate')
-print("pirates:", df2.shape[0])
+# ### get data
+# df1 = load_data_chat_logs().assign(target='chat_logs')
+# print("logs:", df1.shape[0])
+# df2 = load_data_pirates().assign(target='pirate')
+# print("pirates:", df2.shape[0])
+# df = pd.concat([df1, df2])
+df2 = load_data_pirates().assign(target='pirates').sample(1000)
+
+brown_sent = brown.sents(categories='reviews')[:5000]
+brown_sent = [' '.join(x) for x in brown_sent]
+df1 = pd.DataFrame({'text': brown_sent}).assign(target='reviews')
+# df2 = load_data_king_arthur().assign(target='king')
 df = pd.concat([df1, df2])
 
-## TCAP
+#
+# ## TCAP
 tcap = TCAP(NLP(df, target_column='target'))
 tcap.run()
+print("train", tcap.nlp.train.to_csv("embedding.csv"))
+print("test", tcap.nlp.test.to_csv("test_embedding.csv"))
+# nlp = tcap.nlp
+# print(nlp.cv_data.splits[0][0])
+# nlp =
 # cv_data = tcap.nlp.cv_data
 
-cv_data = CVData(train_data=tcap.nlp.train, target_col=tcap.nlp.target_column)
-cv_scores = LogisticRegressionModel(cv_data, target_col='target').train_cv()
-print(cv_scores)
+# cv_data = CVData(train_data=tcap.nlp.train, target_col=tcap.nlp.target_column)
+# cv_scores = LogisticRegressionModel(cv_data, target_col='target').train_cv()
+# print(cv_scores)
 # print(tcap.df[0:10])
 # model.predict(train.drop(columns=['target']))
 
