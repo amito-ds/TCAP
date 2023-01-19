@@ -198,9 +198,8 @@ class FeatureAnalysis:
             tsne_plot=True,
             top_n_pairplot=True,
             chi_square_test_all_features=True):
-        # TODO remove comment
-        # if correlation_matrix:
-        #     self.correlation_matrix()
+        if correlation_matrix:
+            self.correlation_matrix()
         if tsne_plot:
             if not (not self.target_column):
                 self.tsne_plot()
