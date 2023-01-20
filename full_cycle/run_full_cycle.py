@@ -72,7 +72,7 @@ def run_full_cycle(text_cleaner: cln.TextCleaner,
     if not feature_analysis:
         feature_analysis = PreModelAnalysis(df=train_embedding,
                                             target_column=target_column)
-    # feature_analysis.run()
+    feature_analysis.run()
     #
     # ### training a model
     if not cv_data:
@@ -107,29 +107,10 @@ from util import get_stopwords
 #
 # #
 # # #
-df1 = load_data_chat_logs().assign(target='chat_logs').sample(500, replace=True)
-df2 = load_data_king_arthur().assign(target='wow').sample(100, replace=True)
-df3 = load_data_pirates().assign(target='pirate').sample(500, replace=True)
-df4 = load_data_chat_logs().assign(target='chat_logs_b').sample(100, replace=True)
+df1 = load_data_pirates().assign(target='chat_logs')
+df2 = load_data_king_arthur().assign(target='pirates')
+df = pd.concat([df1, df2])
 
-df = pd.concat([
-    df1,
-    df2,
-    # df3,
-    # df4
-])
-
-import sys
-
-# Save the original stdout
-original_stdout = sys.stdout
-
-# Open a file for writing
-import logging
-
-# Configure the logging module
-logging.basicConfig(filename='output.log', level=logging.WARNING)
-logging.basicConfig(filename='output.log', level=logging.WARN)
 
 run_full_cycle(TextCleaner(df=df))
 
