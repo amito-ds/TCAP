@@ -28,12 +28,12 @@ def calculate_text_metrics(text):
     return metrics
 
 
-def calculate_text_column_metrics(df):
+def calculate_text_column_metrics(df, text_col: str = 'text'):
     df = df.copy()
-    df['text_metrics'] = df['text'].apply(calculate_text_metrics)
-    words = df['text'].str.split(expand=True).stack().unique()
+    df[f'metrics_{text_col}'] = df[text_col].apply(calculate_text_metrics)
+    words = df[text_col].str.split(expand=True).stack().unique()
     num_unique_words = len(words)
-    df = pd.json_normalize(df['text_metrics'])
+    df = pd.json_normalize(df[f'metrics_{text_col}'])
     return df, num_unique_words
 
 
@@ -61,8 +61,8 @@ def plot_text_length_and_num_words(df):
     plt.show()
 
 
-def analyze_text_stats(df):
-    df, num_unique_words = calculate_text_column_metrics(df)
+def analyze_text_stats(df, text_col='text'):
+    df, num_unique_words = calculate_text_column_metrics(df, text_col=text_col)
     report = create_report(df, num_unique_words)
     print(report)
     plot_text_length_and_num_words(df)

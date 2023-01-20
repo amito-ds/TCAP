@@ -12,10 +12,16 @@ from sklearn.model_selection import KFold
 
 
 class CVData:
-    def __init__(self, train_data, test_data, folds=5):
+    def __init__(self, train_data,
+                 test_data=None,
+                 folds=5,
+                 target_col: str = None):
         self.train_data = train_data
         self.test_data = test_data
-        self.splits = self.cv_preparation(train_data=train_data, test_data=test_data, k_fold=folds)
+        self.folds = folds
+        self.target_col = target_col
+        self.splits = self.cv_preparation(train_data=self.train_data, test_data=self.test_data, k_fold=self.folds)
+        self.encoded_folds = []
 
     @staticmethod
     def cv_preparation(train_data, test_data=None, k_fold=0):
@@ -23,10 +29,25 @@ class CVData:
             return None
         elif k_fold > 0:
             kf = KFold(n_splits=k_fold)
-            splits = [(train, test) for train, test in kf.split(train_data)]
+            splits = []
+            for train_indices, test_indices in kf.split(train_data):
+                train = train_data.iloc[train_indices]
+                test = train_data.iloc[test_indices]
+                splits.append((train, test))
             return splits
+
+    def print(self):
+        # Print information about train and test data
+        print(f"Train data shape: {self.train_data.shape}")
+        if self.test_data is not None:
+            print(f"Test data shape: {self.test_data.shape}")
         else:
-            raise ValueError("k_fold must be a positive integer")
+            print("Test data not provided.")
+        print(f"Number of splits: {len(self.splits)}")
+        # Print information about first split
+        if self.splits:
+            print(f"First split train data shape: {self.train_data.iloc[self.splits[0][0]].shape}")
+            print(f"First split test data shape: {self.train_data.iloc[self.splits[0][1]].shape}")
 
 
 class Parameter:
@@ -68,27 +89,3 @@ class ComplexParameterSet:
 def print_report(parameters: List[Parameter]):
     for param in parameters:
         print(f"{param.name}: {param.value}")
-
-
-# Usage example
-
-if __name__ == '__main__':
-    options = [1, 2, 3, 4, 5]
-    param1 = ComplexParameter('param1', options)
-    options = (0, 1)
-    param2 = ComplexParameter('param2', options)
-    options = [0, 1, 2, 3, 4, 5]
-    param3 = ComplexParameter('param3', options)
-
-    param_set = ComplexParameterSet([param1, param2, param3])
-
-    print(print_report(param_set.sample()))
-
-    # df = load_data_chat_logs()
-    # cv_data = cv_preparation(train_data=df, test_data=df, k_fold=5)
-
-    # x, y, z = cv_preparation(train_data=df_embedding, test_data=df_test_embedding, k_fold=10)
-    # print(x.shape)
-    # print(y.shape)
-    # for el in z:
-    #     print(el[0].shape, el[1].shape)

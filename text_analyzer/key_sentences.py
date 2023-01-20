@@ -63,15 +63,13 @@ def key_sentences(df, text_column='clean_text', common_sentences=10):
     return cnt.most_common(common_sentences)
 
 
-def extract_key_sentences(df: pd.DataFrame, text_column='clean_text', algorithm='LSA', n_sentences=10,
-                          top_words=20):
+def extract_key_sentences(df: pd.DataFrame, text_column='text', algorithm='LSA', n_sentences=10):
     """
     Extract k most important sentences from a pandas dataframe containing text data.
     :param df: the dataframe to extract key sentences from
     :param text_column: the name of the column containing the text data (default: 'clean_text')
     :param algorithm: the algorithm to use for sentence extraction (default: 'summarization')
     :param n_sentences: the number of sentences to extract (default: 10)
-    :param top_words: top words to return out of the summary for the summarization algo type
     :return: list of k most important sentences
     """
     full_text = '. '.join(df[text_column])

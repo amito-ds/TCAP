@@ -6,9 +6,9 @@ from sklearn.feature_extraction.text import CountVectorizer
 from wordcloud import WordCloud
 
 
-def plot_corex_wordcloud(df, top_words=10, n_topics=5):
+def plot_corex_wordcloud(df, text_col='text', top_words=10, n_topics=5):
     # Get top words and weights
-    top_words_list = get_top_words(df, top_words, n_topics)
+    top_words_list = get_top_words(df=df, top_words=top_words, n_topics=n_topics, text_col=text_col)
 
     # Combine words and weights into a single list
     words = [word for word, weight in top_words_list]
@@ -25,10 +25,15 @@ def plot_corex_wordcloud(df, top_words=10, n_topics=5):
     plt.show()
 
 
-def get_top_words(df, top_words, n_topics, max_features=1000, ngram_range=(1, 2)):
+def get_top_words(df,
+                  top_words,
+                  n_topics,
+                  max_features=1000,
+                  text_col='text',
+                  ngram_range=(1, 2)):
     # Preprocess data
     vectorizer = CountVectorizer(stop_words='english', max_features=max_features, binary=True, ngram_range=ngram_range)
-    doc_word = vectorizer.fit_transform(df['clean_text'])
+    doc_word = vectorizer.fit_transform(df[text_col])
     doc_word = ss.csr_matrix(doc_word)
     feature_names = list(vectorizer.vocabulary_.keys())
     words = list(np.asarray(feature_names))

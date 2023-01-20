@@ -73,6 +73,7 @@ def print_analyze_message(create_wordcloud: bool = True,
 
 
 def analyze_text(df: pd.DataFrame,
+                 text_column: str = 'text',
                  create_wordcloud: bool = True,
                  corex_topics: bool = True,
                  key_sentences: bool = True,
@@ -99,23 +100,23 @@ def analyze_text(df: pd.DataFrame,
     print_analyze_message()
     if data_quality:
         print(data_quality_message)
-        analyze_text_stats(df)
+        analyze_text_stats(df, text_col=text_column)
     if common_words:
         print(common_words_message)
-        print(most_common_words(df, common_words=top_words))
+        print(most_common_words(df, common_words=top_words, text_col=text_column))
     if create_wordcloud:
         print(word_cloud_message)
-        create_word_cloud(df)
+        create_word_cloud(df, text_col=text_column)
     if sentiment:
         print(sentiment_analysis_message)
         df = df.copy()
-        df = analyze_sentiment(df)
+        df = analyze_sentiment(df, text_col=text_column)
         print(df.columns)
         print(report_sentiment_stats(df))
         plot_sentiment_scores(df)
     if corex_topics:
         print(corex_topic_message)
-        plot_corex_wordcloud(df, n_topics=corex_topics_num, top_words=top_words)
+        plot_corex_wordcloud(df, n_topics=corex_topics_num, top_words=top_words, text_col=text_column)
     if key_sentences:
         print(key_sentences_message)
-        print(extract_key_sentences(df, n_sentences=n_sentences, top_words=top_words))
+        print(extract_key_sentences(df, n_sentences=n_sentences, text_column=text_column))
